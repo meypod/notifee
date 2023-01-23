@@ -26,14 +26,12 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.core.app.AlarmManagerCompat;
-import androidx.work.ListenableWorker.Result;
 
 import app.notifee.core.database.WorkDataEntity;
 import app.notifee.core.database.WorkDataRepository;
 import app.notifee.core.model.NotificationModel;
 import app.notifee.core.model.TimestampTriggerModel;
 import app.notifee.core.utility.AlarmUtils;
-import app.notifee.core.utility.Callbackable;
 import app.notifee.core.utility.ExtendedListenableFuture;
 import app.notifee.core.utility.ObjectUtils;
 import com.google.common.util.concurrent.FutureCallback;
@@ -155,8 +153,24 @@ class NotifeeAlarmManager {
     timestampTrigger.setNextTimestamp();
 
     if (timestampTrigger.getAllowWhileIdle()) {
-      AlarmManagerCompat.setExactAndAllowWhileIdle(
-          alarmManager, AlarmManager.RTC_WAKEUP, timestampTrigger.getTimestamp(), pendingIntent);
+      int mutabilityFlag = PendingIntent.FLAG_UPDATE_CURRENT;
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        mutabilityFlag = PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT;
+      }
+
+      Context context = getApplicationContext();
+      Intent launchActivityIntent =
+        context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+
+      PendingIntent pendingLaunchIntent =
+        PendingIntent.getActivity(
+          context,
+          0,
+          launchActivityIntent,
+          mutabilityFlag);
+
+      AlarmManagerCompat.setAlarmClock(
+        alarmManager, timestampTrigger.getTimestamp(), pendingIntent, pendingLaunchIntent);
     } else {
       AlarmManagerCompat.setExact(
           alarmManager, AlarmManager.RTC_WAKEUP, timestampTrigger.getTimestamp(), pendingIntent);
