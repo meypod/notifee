@@ -168,9 +168,8 @@ class NotifeeAlarmManager {
           0,
           launchActivityIntent,
           mutabilityFlag);
-
       AlarmManagerCompat.setAlarmClock(
-        alarmManager, timestampTrigger.getTimestamp(), pendingIntent, pendingLaunchIntent);
+        alarmManager, timestampTrigger.getTimestamp(), pendingLaunchIntent, pendingIntent);
     } else {
       AlarmManagerCompat.setExact(
           alarmManager, AlarmManager.RTC_WAKEUP, timestampTrigger.getTimestamp(), pendingIntent);
